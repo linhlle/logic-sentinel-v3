@@ -1,0 +1,28 @@
+body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Courier New', monospace;
+    padding: 20px;
+    margin: 0;
+}
+
+.brand { color: #58a6ff; font-size: 1.2rem; margin: 0; }
+.status-badge { font-size: 0.7rem; margin-top: 5px; color: #8b949e; }
+
+.meter-container {
+    height: 8px;
+    background: #30363d;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.log {
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 10px;
+    height: 200px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}
+
+.system-msg { color: #d29922; margin: 5px 0; }

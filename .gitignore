@@ -137,3 +137,18 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# macOS System Files
+.DS_Store
+Thumbs.db
+
+# IDE - VS Code
+.vscode/
+
+# IDE - IntelliJ/WebStorm (If you use them)
+*.iml
+.idea/
+
+# Chrome Extension Specifics
+*.crx
+*.pem
