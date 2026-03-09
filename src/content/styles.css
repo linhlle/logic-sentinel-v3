@@ -1,0 +1,9 @@
+.sentinel-hit {
+    position: relative;
+    cursor: help;
+    transition: background 0.3s ease;
+}
+
+.sentinel-hit:hover {
+    background: rgba(88, 166, 255, 0.4) !important;
+}

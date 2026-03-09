@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Send text to Background Script for AI Summary
                 chrome.runtime.sendMessage({
                     type: "SUMMARIZE_PAGE",
-                    text: result.text.substring(0, 2000) 
+                    text: result.text.substring(0, 5000) 
                 }, (response) => {
                     console.log("DEBUG: Final Summary Text:", response.summary);
 
@@ -62,5 +62,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         });
+    });
+
+    chrome.runtime.onMessage.addListener((message) => {
+        if (message.type === "BIAS_HIT") {
+            const log = document.getElementById('audit-stream');
+            const meter = document.getElementById('intensity-meter');
+
+            // #1: Log detection
+            const entry = document.createElement('p');
+            entry.style.fontSize = "0.75rem";
+            entry.style.borderLeft = "2px solid #58a6ff";
+            entry.style.paddingLeft = "8px";
+            entry.innerHTML = `<span style="color: #8b949e;">[DETECTION]</span> <strong style="color: #58a6ff;">${message.word.toUpperCase()}</strong>`;
+            log.appendChild(entry);
+
+            // Auto-scroll log
+            log.scrollTop = log.scrollHeight;
+
+            // #2: Update intensity meter
+            const increment = message.severity === "HIGH" ? 10 : 5; // High severity fills meter faster
+            const currentWidth = parseFloat(meter.style.width) || 0;
+            meter.style.width = Math.min(currentWidth + increment, 100) + "%";
+        }
     });
 });
