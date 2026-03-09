@@ -152,3 +152,5 @@ Thumbs.db
 # Chrome Extension Specifics
 *.crx
 *.pem
+
+src/utils/config.js

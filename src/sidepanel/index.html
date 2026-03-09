@@ -4,6 +4,37 @@
         <meta charset="UTF-8">
         <title>Sentinel Console</title>
         <link rel="stylesheet" href="../../styles/main.css">
+        <style>
+            .summary-container {
+                background: #161b22;
+                border-left: 2px solid #58a6ff;
+                padding: 12px;
+                margin-bottom: 20px;
+                font-family: 'Courier New', monospace;
+            }
+
+            .label { 
+                color: #8b949e; 
+                font-weight: bold; 
+                font-size: 0.7rem;
+                margin-bottom: 6px; 
+                letter-spacing: 1px;
+            }
+
+            .summary-content { 
+                color: #c9d1d9; 
+                font-size: 0.85rem;
+                line-height: 1.4;
+                font-style: italic;
+            }
+
+            .meter-bar {
+                height: 100%;
+                width: 0%;
+                background-color: #58a6ff;
+                transition: width 0.5s ease-in-out;
+            }
+        </style>
     </head>
 
     <body>
@@ -11,6 +42,28 @@
             <h1 class="brand">SENTINEL_V1.0</h1>
             <div id="connection-status" class="status-badge">AWAITING_BRIDGE...</div>
         </div>
+        
+        <button id="scan-btn" class="primary-btn">INITIALIZE_SCAN</button>
+
+        <div class="summary-container">
+            <div class="label">PAGE_ABSTRACT</div>
+            <div id="summary-text" class="summary-content">Analyzing intent and rhetorical structure...</div>
+        </div>
+
+        <style>
+        .primary-btn {
+            background: #238636; 
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .primary-btn:hover { background: #2ea043; }
+        </style>
         
         <div class="meter-container">
             <div id="intensity-meter" class="meter-bar"></div>
