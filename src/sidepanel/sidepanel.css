@@ -1,0 +1,123 @@
+
+body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.brand {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.status-badge {
+    font-size: 0.65rem;
+    font-family: monospace;
+    padding: 2px 6px;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+}
+
+/* Button Styles */
+.primary-btn {
+    background: #238636; 
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.primary-btn:hover { background: #2ea043; }
+.primary-btn:disabled { background: #161b22; color: #8b949e; cursor: not-allowed; }
+
+/* Abstract Container */
+.summary-container {
+    background: #161b22;
+    border-left: 2px solid #58a6ff;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
+}
+
+.label { 
+    color: #8b949e; 
+    font-weight: bold; 
+    font-size: 0.7rem;
+    margin-bottom: 6px; 
+    letter-spacing: 1px;
+}
+
+.summary-content { 
+    color: #c9d1d9; 
+    font-size: 0.85rem;
+    line-height: 1.4;
+    font-style: italic;
+    display: none; /* Hidden until scan finishes */
+}
+
+/* Meter Styles */
+.meter-container {
+    height: 8px;
+    background: #30363d;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.meter-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #58a6ff;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Log / Audit Stream */
+.log {
+    font-family: monospace;
+    font-size: 0.75rem;
+    height: 200px;
+    overflow-y: auto;
+    border-top: 1px solid #30363d;
+    padding-top: 10px;
+}
+
+.system-msg { color: #8b949e; margin: 4px 0; }
+
+/* Interactive Hit Entries */
+.hit-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border-left: 3px solid #58a6ff;
+}
+
+.verify-btn {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #58a6ff;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+}
