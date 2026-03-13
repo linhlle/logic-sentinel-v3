@@ -11,6 +11,7 @@ const RHETORICAL_ANCHORS = [
 ];
 
 let hitCounter = 0;
+let tooltipElement = null;
 
 // #1: Scanner 
 function rhetoricScanner() {
@@ -92,7 +93,7 @@ function processHit(node, word) {
     const hasEvidence = /because|due to|source|study|evidence|data/i.test(sentence);
     const severity = !hasEvidence ? "HIGH" : "LOW";
 
-    highlightNode(node, hitId); 
+    highlightNode(node, hitId, severity, word); 
 
     chrome.runtime.sendMessage({
         type: "BIAS_HIT",
@@ -114,12 +115,31 @@ function getSentenceFromNode(node, phrase) {
 }
 
 // #2: Visual highlighter
-function highlightNode(node, hitId) {
+function highlightNode(node, hitId, severity, word) {
     const span = document.createElement('span');
     span.id = hitId;
     span.className = 'sentinel-hit';
     span.style.backgroundColor = "rgba(88, 166, 255, 0.2)";
     span.style.borderBottom = "2px solid #58a6ff";
+    span.style.cursor = "help";
+
+    // Phase 2: Hover logic
+    span.onmouseenter = (e) => {
+        const rect = e.target.getBoundingClientRect();
+        tooltipElement.style.display = 'block';
+        tooltipElement.style.top = `${rect.top - 40}px`;
+        tooltipElement.style.left = `${rect.left}px`;
+        
+        const type = severity === "HIGH" ? "NAKED ASSERTION" : "SUPPORTED CLAIM";
+        tooltipElement.innerHTML = `
+            <div class="severity-${severity.toLowerCase()}">[${severity}] ${type}</div>
+            <div style="margin-top:4px;">"${word}" used without immediate evidence links.</div>
+        `;
+    };
+
+    span.onmouseleave = () => {
+        tooltipElement.style.display = 'none';
+    };
 
     const parent = node.parentNode;
     if (parent) {
@@ -133,6 +153,47 @@ function highlightNode(node, hitId) {
 function getCleanText() {
     return document.body.innerText.replace(/\s+/g, ' ').trim();
 }
+
+// #4: Phase 2: Tooltip
+function createTooltip() {
+    const container = document.createElement('div');
+    container.id = 'sentinel-tooltip-container';
+    document.body.appendChild(container);
+
+    const shadow = container.attachShadow({ mode: 'open' });
+    const tooltip = document.createElement('div');
+    tooltip.id = 'sentinel-tooltip';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        #sentinel-tooltip {
+            position: fixed;
+            background: #161b22;
+            color: #c9d1d9;
+            border: 1px solid #58a6ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            z-index: 100000;
+            display: none;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            max-width: 250px;
+            line-height: 1.4;
+        }
+        .severity-high { color: #f85149; font-weight: bold; }
+        .severity-low { color: #58a6ff; font-weight: bold; }
+    `;
+
+    shadow.appendChild(style);
+    shadow.appendChild(tooltip);
+    tooltipElement = tooltip;
+}
+
+// Initialize tooltip on load
+createTooltip();
+
 
 // Listen for the Side Panel's request for text
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
