@@ -127,18 +127,50 @@ function highlightNode(node, hitId, severity, word) {
     span.onmouseenter = (e) => {
         const rect = e.target.getBoundingClientRect();
         tooltipElement.style.display = 'block';
-        tooltipElement.style.top = `${rect.top - 40}px`;
-        tooltipElement.style.left = `${rect.left}px`;
+        tooltipElement.style.top = `${rect.bottom + window.scrollY + 5}px`;
+        tooltipElement.style.left = `${rect.left + window.scrollX}px`;
         
         const type = severity === "HIGH" ? "NAKED ASSERTION" : "SUPPORTED CLAIM";
         tooltipElement.innerHTML = `
             <div class="severity-${severity.toLowerCase()}">[${severity}] ${type}</div>
-            <div style="margin-top:4px;">"${word}" used without immediate evidence links.</div>
+            <div style="margin-top:4px;">"${word}" found. Likely rhetorical pressure.</div>
+            <button id="deconstruct-trigger" class="deconstruct-btn">AI_DECONSTRUCT_LOGIC</button>
+            <div id="ai-output" class="ai-response" style="display:none;"></div>        
         `;
+
+        const container = document.getElementById('sentinel-tooltip-container');
+        const shadow = container.shadowRoot;
+        const btn = shadow.getElementById('deconstruct-trigger');
+        const output = shadow.getElementById('ai-output');
+        
+        btn.onclick = (event) => {
+            event.stopPropagation();
+            btn.innerText = "THINKING...";
+            btn.disabled = true;
+
+            // Get the fresh sentence context
+            const sentence = getSentenceFromNode(node, word);
+
+            chrome.runtime.sendMessage({
+                type: "DECONSTRUCT_CLAIM",
+                sentence: sentence 
+            }, (response) => {
+                btn.style.display = 'none';
+                output.style.display = 'block';
+                output.innerText = `> ${response.question}`;
+            });
+        };
+
     };
 
-    span.onmouseleave = () => {
-        tooltipElement.style.display = 'none';
+
+    span.onmouseleave = (e) => {
+        const container = document.getElementById('sentinel-tooltip-container');
+        setTimeout(() => {
+            if (!container.matches(':hover') && !span.matches(':hover')) {
+                tooltipElement.style.display = 'none';
+            }
+        }, 100);    
     };
 
     const parent = node.parentNode;
@@ -167,21 +199,47 @@ function createTooltip() {
     const style = document.createElement('style');
     style.textContent = `
         #sentinel-tooltip {
-            position: fixed;
+            position: absolute;
             background: #161b22;
             color: #c9d1d9;
-            border: 1px solid #58a6ff;
-            padding: 8px 12px;
+            border: 1px solid #30363d; /* Subtler border */
+            padding: 12px;
             border-radius: 6px;
-            font-family: 'Courier New', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             font-size: 12px;
-            z-index: 100000;
+            z-index: 2147483647;
             display: none;
-            pointer-events: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            max-width: 250px;
-            line-height: 1.4;
+            pointer-events: auto;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            max-width: 280px;
         }
+        .deconstruct-btn {
+            margin-top: 10px;
+            background: #238636;
+            color: #ffffff;
+            border: 1px solid rgba(240,246,252,0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            font-size: 11px;
+            font-family: monospace;
+            transition: 0.2s;
+        }
+        .deconstruct-btn:hover { background: #2ea043; }
+        .deconstruct-btn:disabled { background: #161b22; color: #8b949e; cursor: wait; }
+        
+        .ai-response {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(88, 166, 255, 0.1);
+            border-radius: 4px;
+            color: #79c0ff;
+            font-style: italic;
+            border-left: 2px solid #58a6ff;
+        }
+
         .severity-high { color: #f85149; font-weight: bold; }
         .severity-low { color: #58a6ff; font-weight: bold; }
     `;

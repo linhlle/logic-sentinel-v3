@@ -1,14 +1,19 @@
 import { AI_CONFIG } from "./config.js";
 
-export async function getSummary(text) {
-    const prompt = `Provide a 3-4 sentences summary of the following text, focusing on its main argument and rhetorical tone: ${text}`;
+export async function queryPrompt(prompt) {
 
     try {
         const response = await fetch(`${AI_CONFIG.MODEL_URL}?key=${AI_CONFIG.API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.2,
+                    topK: 1,
+                    topP: 1,
+                    maxOutputTokens: 500
+                }
             })
         });
 
@@ -16,17 +21,17 @@ export async function getSummary(text) {
 
         if (data.error) {
             console.error("Gemini API Error:", data.error.message);
-            return `AI Error: ${data.error.message}`;
+            throw new Error(data.error.message); 
         }
 
         if (!data.candidates || data.candidates.length === 0) {
             console.error("No candidates returned. Full Response:", data);
-            return "The AI declined to summarize this content.";
+            return "NO_INFERENCE_GENERATED";
         }
 
         return data.candidates[0].content.parts[0].text;
     } catch (e) {
-        console.error("AI Summary error: ", e);
-        return "Unable to generate summary at this time.";
+        console.error("Internal Inference Error: ", e);
+        throw e;
     }
 }
