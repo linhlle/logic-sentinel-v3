@@ -11,8 +11,7 @@ export async function queryPrompt(prompt) {
                 generationConfig: {
                     temperature: 0.2,
                     topK: 1,
-                    topP: 1,
-                    maxOutputTokens: 500
+                    topP: 1
                 }
             })
         });

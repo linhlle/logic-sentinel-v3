@@ -6,12 +6,16 @@
         <link rel="stylesheet" href="../../styles/main.css">
         <link rel="stylesheet" href="sidepanel.css">
     </head>
+    
 
     <body>
         <div class="header">
             <h1 class="brand">SENTINEL_V1.0</h1>
-            <div id="connection-status" class="status-badge">AWAITING_BRIDGE...</div>
-        </div>
+            <div class="header-actions">
+                <button id="refresh-btn" class="icon-btn" title="Clear Cache & Re-analyze">&#x21BB;</button>
+                <div id="connection-status" class="status-badge">AWAITING_BRIDGE...</div>
+            </div>    
+    </div>
 
         <button id="scan-btn" class="primary-btn">INITIALIZE_SCAN</button>
 
@@ -27,6 +31,6 @@
         <div id="audit-stream" class="log">
             <p class="system-msg">> Initialization started...</p>
         </div>
-        <script src="sidepanel.js"></script>
+        <script src="sidepanel.js" type="module"></script>
     </body>
 </html>

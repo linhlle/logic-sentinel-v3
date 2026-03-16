@@ -19,6 +19,7 @@ function rhetoricScanner() {
     const treeWalker = document.createTreeWalker(mainContent, NodeFilter.SHOW_TEXT);
     let node;
     const nodesToProcess = [];
+    const scannerBatch = [];
 
     while (node = treeWalker.nextNode()) {
         const text = node.textContent.toLowerCase();
@@ -54,36 +55,91 @@ function rhetoricScanner() {
 
     nodesToProcess.forEach(item => {
         if (item.node.parentNode) {
-            processHit(item.node, item.word);
+            const hitData = processHit(item.node, item.word);
+            if (hitData) scannerBatch.push(hitData);
         }
     });
-       
-        // Phrasal check
-        // RHETORICAL_ANCHORS.forEach(phrase => {
-        //     if (text.includes(phrase) && !node.parentElement.classList.contains('sentinel-hit')) {
-        //         processHit(node, phrase);
-        //     }
-        // });
 
-        // // Keyword check
-        // BIAS_PATTERN.lastIndex = 0;
-        // let match;
-        // while ((match = BIAS_PATTERN.exec(text)) != null) {
-        //     if (!parent.classList.contains('sentinel-hit')) {
-        //         processHit(node, match[0]);
-        //     }
-        // }
-        // if (BIAS_PATTERN.test(text) && !node.parentElement.classList.contains('sentinel-hit')) {
-        //     const matches = text.match(BIAS_PATTERN);
-        //     if (matches) {
-        //         matches.forEach(word => {
-        //             chrome.runtime.sendMessage({ type: "BIAS_HIT", word: word });
-        //         });
-        //         highlightNode(node);
-        //     }
-        // }
-    
+    if (scannerBatch.length > 0) {
+        chrome.runtime.sendMessage({
+            type: "BIAS_HIT_BATCH",
+            hits: scannerBatch
+        });
+    }
+       
 }
+
+// Phase 2.5: ELM 
+async function performELMAudit() {
+    console.log("Sentinel: Starting ELM Strategy Audit...");
+    const bodyCopy = document.querySelector('article') || document.body;
+    const pageText = bodyCopy.innerText.substring(0, 10000);
+
+    chrome.runtime.sendMessage({
+        type: "ELM_AUDIT",
+        text: pageText
+    },
+    (response) => {
+        if (response.error) {
+            console.error("ELM Audit Error:", response.error);
+            return;
+        }
+
+        if (response && response.auditData && response.auditData.length > 0) {
+            console.log("Sentinel: ELM Strategies Detected:", response.auditData.length);
+            response.auditData.forEach(hit => {
+                applyELMHighlight(hit.text, hit.cue, hit.reason);
+            });
+        } else {
+            console.log("Sentinel: No Peripheral Cues detected in this segment.");
+        }
+    });
+}
+
+// Phase 2.5: Helper function for performELMAudit
+function applyELMHighlight(exactText, cueType, reason) {
+    const treeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while (node = treeWalker.nextNode()) {
+        if (node.textContent.includes(exactText) && exactText.length > 3) {
+            const parent = node.parentNode;
+            
+            if (parent.classList.contains('sentinel-hit') || ['SCRIPT', 'STYLE'].includes(parent.tagName)) continue;
+
+            const span = document.createElement('span');
+            span.className = 'sentinel-hit elm-hit';
+            span.style.borderBottom = "2px solid #a371f7";
+            span.style.backgroundColor = "rgba(163, 113, 247, 0.1)";
+            span.style.cursor = "help";
+
+            span.onmouseenter = (e) => {
+                const rect = e.target.getBoundingClientRect();
+                tooltipElement.style.display = 'block';
+                tooltipElement.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                tooltipElement.style.left = `${rect.left + window.scrollX}px`;
+                tooltipElement.innerHTML = `
+                    <div style="color: #a371f7; font-weight: bold;">[ELM] ${cueType}</div>
+                    <div style="margin-top:4px;">${reason}</div>
+                `;
+            };
+            span.onmouseleave = () => { tooltipElement.style.display = 'none'; };
+
+            const origText = node.textContent;
+            const parts = origText.split(exactText);
+            
+            if (parts.length > 1) {
+                const fragment = document.createDocumentFragment();
+                fragment.appendChild(document.createTextNode(parts[0]));
+                span.textContent = exactText;
+                fragment.appendChild(span);
+                fragment.appendChild(document.createTextNode(parts.slice(1).join(exactText)));
+                
+                parent.replaceChild(fragment, node);
+            }
+        }
+    }
+}
+
 
 // #3: Logic: Severity n Communication
 function processHit(node, word) {
@@ -95,13 +151,19 @@ function processHit(node, word) {
 
     highlightNode(node, hitId, severity, word); 
 
-    chrome.runtime.sendMessage({
-        type: "BIAS_HIT",
+    // chrome.runtime.sendMessage({
+    //     type: "BIAS_HIT",
+    //     word: word,
+    //     severity: severity,
+    //     hitId: hitId,
+    //     sentence: sentence
+    // });
+    return {
         word: word,
         severity: severity,
         hitId: hitId,
         sentence: sentence
-    });
+    };
 
 }
 
@@ -260,9 +322,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         // #1
         rhetoricScanner();
-        
-        // #2
-        sendResponse({ text: getCleanText() });
+        const pageContent = getCleanText();
+        sendResponse({ text: pageContent });
+
+        // 2.5
+        performELMAudit();
 
         // #3: Observe for changes in the page's content (new content like scrolling sth)
         const observer = new MutationObserver(() => rhetoricScanner());
